@@ -1,2 +1,2 @@
 # Pharmacy
-Java RESTservices with CRUD operation from database
+Java RESTservices with CRUD operation from database.
