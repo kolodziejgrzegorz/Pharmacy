@@ -1,5 +1,5 @@
-Create database if not exists pharmacy;
-use `pharmacy`;
+Create database if not exists apteka;
+use `apteka`;
 
 CREATE TABLE `drug` (
  
