@@ -1,0 +1,23 @@
+CREATE TABLE `drug` (
+ 
+`id` int(50) NOT NULL AUTO_INCREMENT,
+  
+`name` varchar(100) NOT NULL,
+  
+`cost` decimal(6,2) NOT NULL,
+  
+`amount` int(50) DEFAULT NULL,
+  
+`size` varchar(45) DEFAULT NULL,
+  
+PRIMARY KEY (`id`)
+
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=latin1
+
+INSERT INTO `drugs`(`id`,`name`,`cost`,`amount`,`size`) VALUES
+
+('1','rutinoscorbin','10',`5`,`20 tabs`),
+
+('2','wit D','20',`10`,`100 tabs`),
+
+('3','Wit C','5',`100`,`100 tabs`);
