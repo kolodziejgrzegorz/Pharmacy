@@ -39,4 +39,9 @@ public class DrugServiceImpl implements DrugService {
 		drugDao.deleteDrug(drugId);
 	}
 
+	@Override
+	public boolean exists(Drug theDrug) {
+		return drugDao.exists(theDrug);
+	}
+
 }

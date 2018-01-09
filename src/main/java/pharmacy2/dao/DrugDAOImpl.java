@@ -55,4 +55,14 @@ public class DrugDAOImpl implements DrugDAO {
 		
 	}
 
+	@Override
+	public boolean exists(Drug theDrug) {
+		Session currentSession = sessionFactory.getCurrentSession();
+		Query<Drug> theQuery = currentSession.createQuery("from Drug where drugName=:drugName",Drug.class); 
+		theQuery.setParameter("drugName", theDrug.getDrugName());
+		return theQuery.getResultList().size() > 0 ;
+	}
+
 }
+
+

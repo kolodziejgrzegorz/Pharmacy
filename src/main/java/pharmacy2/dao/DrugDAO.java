@@ -15,4 +15,6 @@ public interface DrugDAO {
 	public void updateDrug(Drug theDrug);
 	
 	public void deleteDrug(int drugId);
+	
+	public boolean exists(Drug theDrug);
 }

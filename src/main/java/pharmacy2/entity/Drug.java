@@ -20,10 +20,10 @@ public class Drug {
 	private String drugName;
 	
 	@Column(name="cost")
-	private double drugCost;
+	private double drugCost=-1.00;
 	
 	@Column(name="amount")
-	private int drugAmount=0;
+	private int drugAmount=-1;
 	
 	@Column(name="size")
 	private String drugSize;
@@ -76,6 +76,34 @@ public class Drug {
 	public String toString() {
 		return "Drug [drugId=" + drugId + ", drugName=" + drugName + ", drugCost=" + drugCost + ", drugAmount=" + drugAmount
 				+ ", drugSize=" + drugSize + "]";
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + drugId;
+		result = prime * result + ((drugName == null) ? 0 : drugName.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Drug other = (Drug) obj;
+		if (drugId != other.drugId)
+			return false;
+		if (drugName == null) {
+			if (other.drugName != null)
+				return false;
+		} else if (!drugName.equals(other.drugName))
+			return false;
+		return true;
 	}
 
 	
