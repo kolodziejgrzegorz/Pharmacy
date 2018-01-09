@@ -1,3 +1,6 @@
+Create database if not exists apteka;
+use `apteka`;
+
 CREATE TABLE `drug` (
  
 `id` int(50) NOT NULL AUTO_INCREMENT,
