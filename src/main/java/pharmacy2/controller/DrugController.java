@@ -46,18 +46,11 @@ public class DrugController {
 					produces = { MediaType.APPLICATION_JSON_VALUE })
 	public ResponseEntity<Void> addDrug(@RequestBody Drug theDrug) {
 		if(drugService.exists(theDrug)) {
-			throw new DataExistsException("Drug with name " + theDrug.getDrugName() + " already exists");
+			throw new DataExistsException("Drug with name '" + theDrug.getDrugName() + "' already exists");
 		}
 		
-		StringBuilder builder = new StringBuilder();
-		if(theDrug.getDrugId() == 0) builder.append(" drugId");
-		if(theDrug.getDrugName() == null) builder.append(" drugName");
-		if(theDrug.getDrugCost() <0) builder.append(" drugCost");
-		if(theDrug.getDrugAmount() <0) builder.append(" drugAmount");
-		if(theDrug.getDrugSize() == null) builder.append(" drugSize");
-		
-		if(builder.length()>0) throw new DataNotFoundException("Missing property" + builder.toString());
-		if(theDrug.getDrugName() == null) throw new DataNotFoundException("Missing property drugName");
+		String valid = validName(theDrug);
+		if(valid!=null) throw new DataNotFoundException("Missing property" + valid);
 		
 		drugService.addDrug(theDrug);
 		return new ResponseEntity<Void>(HttpStatus.CREATED);
@@ -66,16 +59,11 @@ public class DrugController {
 	@RequestMapping(value = "/drugs/update", method = RequestMethod.PUT, consumes = { MediaType.APPLICATION_JSON_VALUE },
 					produces = { MediaType.APPLICATION_JSON_VALUE } )
 	public ResponseEntity<Void> updateDrug(@RequestBody Drug theDrug) {
+	
+		String valid = validName(theDrug);
 		
-		StringBuilder builder = new StringBuilder();
-		if(theDrug.getDrugId() == 0) builder.append(" drugId");
-		if(theDrug.getDrugName() == null) builder.append(" drugName");
-		if(theDrug.getDrugCost() <0) builder.append(" drugCost");
-		if(theDrug.getDrugAmount() <0) builder.append(" drugAmount");
-		if(theDrug.getDrugSize() == null) builder.append(" drugSize");
-		
-		if(builder.length()>0) throw new DataNotFoundException("Missing property" + builder.toString());		
-		if(!drugService.exists(theDrug)) throw new DataExistsException("Not found drug with id = " + theDrug.getDrugId()); 
+		if(valid!=null) throw new DataNotFoundException("Missing property" + valid);		
+		if(!drugService.exists(theDrug)) throw new DataNotFoundException("Not found drug with id = " + theDrug.getDrugId()); 
 		
 		drugService.updateDrug(theDrug);
 		return new ResponseEntity<Void>(HttpStatus.OK);
@@ -85,6 +73,22 @@ public class DrugController {
 	public ResponseEntity<Void> deleteDrug(@PathVariable("drugId") int drugId) {
 		drugService.deleteDrug(drugId);
 		return new ResponseEntity<Void>(HttpStatus.OK);
+	}
+	
+	private String validName(Drug theDrug) {
+		StringBuilder builder = new StringBuilder();
+		
+		if(theDrug.getDrugId() == 0) builder.append(" drugId");
+		if(theDrug.getDrugName() == null) builder.append(" drugName");
+		if(theDrug.getDrugCost() <0) builder.append(" drugCost");
+		if(theDrug.getDrugAmount() <0) builder.append(" drugAmount");
+		if(theDrug.getDrugSize() == null) builder.append(" drugSize");
+				
+		if(builder.length()>0) {
+			return builder.toString();
+		}
+		return null;
+		
 	}
 
 }

@@ -87,10 +87,10 @@ public class CustomRestExceptionHandler extends ResponseEntityExceptionHandler {
 	@Override
 	public ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, 
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
-		String error = "This is an invalid json. The request can not be parsed" + ex.getRootCause().toString();
-		ex.getRootCause().toString();
+		String error = "This is an invalid json. The request can not be parsed";
+		String message = "This error can be cause by: wrong JSON format or wrong data format.";
 		
-		ErrorMessage errorMessage = new ErrorMessage(HttpStatus.BAD_REQUEST, ex.getMostSpecificCause().toString(), error);
+		ErrorMessage errorMessage = new ErrorMessage(HttpStatus.BAD_REQUEST, message, error);
 		return new ResponseEntity<Object>(errorMessage, new HttpHeaders(), errorMessage.getStatus());
 	} 
   

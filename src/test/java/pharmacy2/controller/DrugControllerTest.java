@@ -75,10 +75,17 @@ public class DrugControllerTest {
 	
 	@Test
 	public void getAllNotFoundException() throws Exception{
-		when(drugService.getAllDrugs()).thenThrow(new DataNotFoundException(""));
+		
+		String message = "Drug list not found, check connection with database";
+		List<String> errors = Arrays.asList("404");
+		
+		when(drugService.getAllDrugs()).thenThrow(new DataNotFoundException("Drug list not found, check connection with database"));
 		mockMvc.perform(get("/drugs"))
 				.andExpect(status().isNotFound())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+				.andExpect(jsonPath("$.status",is("NOT_FOUND")))
+				.andExpect(jsonPath("$.message",is(message)))
+				.andExpect(jsonPath("$.errors",is(errors)));
 		verify(drugService,times(1)).getAllDrugs();
 		verifyNoMoreInteractions(drugService);
 	}
@@ -86,9 +93,15 @@ public class DrugControllerTest {
 	@Test
 	public void getAllMethodNotAllowedException() throws Exception{
 	
+		String message = "Request method 'POST' not supported";
+		List<String> errors = Arrays.asList("POST method is not supported for this request. Supported methods are GET ");
+		
 		mockMvc.perform(post("/drugs"))
 				.andExpect(status().isMethodNotAllowed())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+				.andExpect(jsonPath("$.status",is("METHOD_NOT_ALLOWED")))
+				.andExpect(jsonPath("$.message",is(message)))
+				.andExpect(jsonPath("$.errors",is(errors)));
 	}
 	
 	@Test
@@ -129,13 +142,14 @@ public class DrugControllerTest {
 	public void getByIdNotFoundException()  throws Exception {
 		
 		List<String> errors = Arrays.asList("404");
-		
+		String message = "Drug with Id = 1 not found";
+				
 		when(drugService.getDrug(1)).thenThrow(new DataNotFoundException("Drug with Id = 1 not found"));
 		mockMvc.perform(get("/drugs/1"))
 			.andExpect(status().isNotFound())
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
 			.andExpect(jsonPath("$.status",is("NOT_FOUND")))
-			.andExpect(jsonPath("$.message",is("Drug with Id = 1 not found")))
+			.andExpect(jsonPath("$.message",is(message)))
 			.andExpect(jsonPath("$.errors",is(errors)));
 		verify(drugService,times(1)).getDrug(1);
 		verifyNoMoreInteractions(drugService);
@@ -163,14 +177,15 @@ public class DrugControllerTest {
 		Drug theDrug = new Drug("wit A", 1.2, 20, "50 tabs");
 		theDrug.setDrugId(1);
 		List<String> errors = Arrays.asList("409");
+		String message = "Drug with name 'wit A' exists";
 		
-		when(drugService.exists(theDrug)).thenThrow(new DataExistsException("Drug with name wit A exists"));
+		when(drugService.exists(theDrug)).thenThrow(new DataExistsException("Drug with name 'wit A' exists"));
 		mockMvc.perform(post("/drugs/add")
 				.contentType(MediaType.APPLICATION_JSON_VALUE)
 				.content(asJsonString(theDrug)))
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
 			.andExpect(jsonPath("$.status",is("CONFLICT")))
-			.andExpect(jsonPath("$.message",is("Drug with name wit A exists")))
+			.andExpect(jsonPath("$.message",is(message)))
 			.andExpect(jsonPath("$.errors",is(errors)))
 			.andExpect(status().isConflict());
 		verify(drugService,times(1)).exists(theDrug);
@@ -178,10 +193,12 @@ public class DrugControllerTest {
 	}
 	
 	@Test
-	public void createDrugHttpMessageNotReadable() throws Exception{
+	public void createDrugInvalidJSONFormat() throws Exception{
 		
 		Drug theDrug = new Drug("wit A", 1.2, 20, "50 tabs");
 		theDrug.setDrugId(1);
+		List<String> errors = Arrays.asList("This is an invalid json. The request can not be parsed");
+		String message = "This error can be cause by: wrong JSON format or wrong data format.";
 		
 		when(drugService.exists(theDrug)).thenReturn(false);
 		doNothing().when(drugService).addDrug(theDrug);
@@ -190,48 +207,169 @@ public class DrugControllerTest {
 				.contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
 				.content(theDrug.toString()))
 			.andExpect(status().isBadRequest())
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+			.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+			.andExpect(jsonPath("$.status",is("BAD_REQUEST")))
+			.andExpect(jsonPath("$.message",is(message)))
+			.andExpect(jsonPath("$.errors",is(errors)));
 		verifyNoMoreInteractions(drugService);
 	}
-	/*
-	 * Bad JSON property name exception test
-	 * 
-	 * 
+	
 	@Test
-	public void createDrugInvalidAttributeInRequest() throws Exception{
+	public void createDrugInvalidAttributeNameInRequest() throws Exception{
 		
+		List<String> errors = Arrays.asList("404");
+		String message = "Missing property drugId drugName drugCost drugAmount drugSize";
 		String theDrug = "{\r\n" + 
-				"	\"drugIdaaaa\": 23,\r\n" + 
-				"	\"drugName\": \"9999\",\r\n" + 
-				"	\"drugCost\": 0.0,\r\n" + 
-				"	\"drugAmount\": 22,\r\n" + 
-				"	\"drugSize\": null\r\n" + 
+				"	\"drugIda\": 1,\r\n" + 
+				"	\"drugNamea\": \"wit A\",\r\n" + 
+				"	\"drugCosta\": 1.1,\r\n" + 
+				"	\"drugAmounta\": 22,\r\n" + 
+				"	\"drugSizea\": \"12 tabs\"\r\n" + 
 				"}" ;
 		
-		//when(drugService.exists(theDrug)).thenReturn(false);
-		//doNothing().when(drugService).addDrug(theDrug);
+		mockMvc.perform(post("/drugs/add")
+				.contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
+				.content(theDrug))
+			.andExpect(status().isNotFound())
+			.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+			.andExpect(jsonPath("$.status",is("NOT_FOUND")))
+			.andExpect(jsonPath("$.message",is(message)))
+			.andExpect(jsonPath("$.errors",is(errors)));
+		
+	}
+	
+	@Test
+	public void createDrugInvalidAttributeValueInRequest() throws Exception{
+		
+		List<String> errors = Arrays.asList("This is an invalid json. The request can not be parsed");
+		String message = "This error can be cause by: wrong JSON format or wrong data format.";
+		String theDrug = "{\r\n" + 
+				"	\"drugId\": \"name\",\r\n" + 
+				"	\"drugName\": \"wit A\",\r\n" + 
+				"	\"drugCost\": 1.1,\r\n" + 
+				"	\"drugAmount\": \"22\",\r\n" + 
+				"	\"drugSize\": \"12 tabs\"\r\n" + 
+				"}" ;
 		
 		mockMvc.perform(post("/drugs/add")
 				.contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
 				.content(theDrug))
 			.andExpect(status().isBadRequest())
-			.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
-		
+			.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+			.andExpect(jsonPath("$.status",is("BAD_REQUEST")))
+			.andExpect(jsonPath("$.message",is(message)))
+			.andExpect(jsonPath("$.errors",is(errors)));
 		verifyNoMoreInteractions(drugService);
 	}
-	*/
 	
 	@Test
 	public void updateDrugSucces() throws Exception {
 		Drug theDrug = new Drug("wit A", 1.2, 20, "50 tabs");
 		theDrug.setDrugId(1);
-		
+			
+		when(drugService.exists(theDrug)).thenReturn(true);
+		//doNothing().when(drugService).addDrug(theDrug);
 		doNothing().when(drugService).updateDrug(theDrug);
+		//when(drugService).updateDrug(theDrug).thenReturn(theDrug);
 		mockMvc.perform(put("/drugs/update")
-						.contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
+						.contentType(MediaType.APPLICATION_JSON_VALUE)
 						.content(asJsonString(theDrug)))
 				.andExpect(status().isOk());
 		verify(drugService,times(1)).updateDrug(theDrug);
+		
+	}
+	
+	@Test
+	public void updateDrugInvalidJSONFormat() throws Exception{
+		
+		Drug theDrug = new Drug("wit A", 1.2, 20, "50 tabs");
+		theDrug.setDrugId(1);
+		List<String> errors = Arrays.asList("This is an invalid json. The request can not be parsed");
+		String message = "This error can be cause by: wrong JSON format or wrong data format.";
+		
+		when(drugService.exists(theDrug)).thenReturn(false);
+		doNothing().when(drugService).updateDrug(theDrug);
+		
+		mockMvc.perform(put("/drugs/update")
+				.contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
+				.content(theDrug.toString()))
+			.andExpect(status().isBadRequest())
+			.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+			.andExpect(jsonPath("$.status",is("BAD_REQUEST")))
+			.andExpect(jsonPath("$.message",is(message)))
+			.andExpect(jsonPath("$.errors",is(errors)));
+		verifyNoMoreInteractions(drugService);	
+	}
+	
+	@Test
+	public void updateDrugNotFound() throws Exception{
+		
+		Drug theDrug = new Drug("wit A", 1.2, 20, "50 tabs");
+		theDrug.setDrugId(1);
+		List<String> errors = Arrays.asList("404");
+		String message = "Not found drug with id = 1";
+		
+		when(drugService.exists(theDrug)).thenReturn(false);
+		doNothing().when(drugService).updateDrug(theDrug);
+		
+		mockMvc.perform(put("/drugs/update")
+					.contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
+					.content(asJsonString(theDrug)))
+			.andExpect(status().isNotFound())
+			.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+			.andExpect(jsonPath("$.status",is("NOT_FOUND")))
+			.andExpect(jsonPath("$.message",is(message)))
+			.andExpect(jsonPath("$.errors",is(errors)));
+		verify(drugService,times(1)).exists(theDrug);
+		
+	}
+	
+	@Test
+	public void updateDrugInvalidAttributeNameInRequest() throws Exception{
+		
+		List<String> errors = Arrays.asList("404");
+		String message = "Missing property drugId drugName drugCost drugAmount drugSize";
+		String theDrug = "{\r\n" + 
+				"	\"drugIda\": 1,\r\n" + 
+				"	\"drugNamea\": \"wit A\",\r\n" + 
+				"	\"drugCosta\": 1.1,\r\n" + 
+				"	\"drugAmounta\": 22,\r\n" + 
+				"	\"drugSizea\": \"12 tabs\"\r\n" + 
+				"}" ;
+
+		mockMvc.perform(put("/drugs/update")
+				.contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
+				.content(theDrug))
+			.andExpect(status().isNotFound())
+			.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+			.andExpect(jsonPath("$.status",is("NOT_FOUND")))
+			.andExpect(jsonPath("$.message",is(message)))
+			.andExpect(jsonPath("$.errors",is(errors)));
+		
+	}
+	
+	@Test
+	public void updateDrugInvalidAttributeValueInRequest() throws Exception{
+		
+		List<String> errors = Arrays.asList("This is an invalid json. The request can not be parsed");
+		String message = "This error can be cause by: wrong JSON format or wrong data format.";
+		String theDrug = "{\r\n" + 
+				"	\"drugId\": \"name\",\r\n" + 
+				"	\"drugName\": \"wit A\",\r\n" + 
+				"	\"drugCost\": 1.1,\r\n" + 
+				"	\"drugAmount\": \"22\",\r\n" + 
+				"	\"drugSize\": \"12 tabs\"\r\n" + 
+				"}" ;
+		
+		mockMvc.perform(put("/drugs/update")
+				.contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
+				.content(theDrug))
+			.andExpect(status().isBadRequest())
+			.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+			.andExpect(jsonPath("$.status",is("BAD_REQUEST")))
+			.andExpect(jsonPath("$.message",is(message)))
+			.andExpect(jsonPath("$.errors",is(errors)));
+		verifyNoMoreInteractions(drugService);
 	}
 	
 	@Test
