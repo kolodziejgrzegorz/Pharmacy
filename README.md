@@ -1,8 +1,13 @@
 # Pharmacy
-Java RESTservices 
+Java application create to learn REST api
 
-Aplikacja umożliwia wyświetlanie, edytowanie, dodawanie i usuwanie użytkowników w bazie danych za pomocą adresów URL. Dane przesyłane są w
-formatcie JSON. 
-W reporytorium dołączony jest także skrypt bazy danych z przykładowymi danymi.
+Java, Spring MVC, Tomcat server, Hibernate and MySql
 
-Tests in progress
+
+Application allows create, edit, delete, add and show all items from database by using HTTP request. Data is send in JSON format.
+
+Application have custom exception which covers most errors  and send nice JSON messege with details what happend.
+
+Tests covers controller class.
+
+
